@@ -1,9 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+# train two naive bayes model based on different feature sets
+# then ensemble them
+
 from __future__ import print_function
 from __future__ import division
 
-# from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer
 import pandas as pd
 from sklearn import metrics

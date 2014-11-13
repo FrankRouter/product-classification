@@ -14,7 +14,9 @@ with codecs.open('data_preprocessed.csv', 'w', encoding='utf-8') as out,\
         # should be 6 columns
         cells = line.strip().split(',', 5)
         try:
+            # remove punctuation
             cleaned = [cell.translate(trans_table) for cell in cells[2:]]
+            # chinese segment
             segmented = [u' '.join(jieba.cut(cell)) for cell in cleaned]
             cells = cells[:2] + segmented
             print(u','.join(cells), file=out)
