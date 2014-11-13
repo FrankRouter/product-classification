@@ -1,7 +1,7 @@
 default: clean data run
 
 data:
-	cat dataset/* > data.csv
+	cat ../dataset/* > data.csv
 
 run: data.csv
 	python remove_punctuation.py
