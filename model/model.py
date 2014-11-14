@@ -42,11 +42,15 @@ max_proba = np.amax(jll, axis=1)
 # search best decision boundry in each category
 if sys.argv[1] == '--adhoc_boundary':
     categoryid_set = set(train['categoryid'].values)
-    boundry_of_category = dict()
+    boundary_of_category = dict()
+    max_p_category = np.amax(jll, axis=0)  # max probability in each category
+    min_p_category = np.amin(jll, axis=0)  # min probability in each category
     for categoryid in categoryid_set:
         max_f1 = .0
         decision_boundary = .0
-        for threshold in np.arange(0, 0.5, 0.05):
+        idx = np.where(clf.classes_ == categoryid)
+        for threshold in np.linspace(min_p_category[idx],
+                                     max_p_category[idx], 10):
             tp = (y_true == categoryid) & (y_pred == categoryid) \
                 & (max_proba >= threshold)
             fp = (y_true != categoryid) & (y_pred == categoryid) \
@@ -59,8 +63,12 @@ if sys.argv[1] == '--adhoc_boundary':
             if f1 > max_f1:
                 max_f1 = f1
                 decision_boundary = threshold
-        boundry_of_category[categoryid] = decision_boundary
+        boundary_of_category[categoryid] = decision_boundary
         y_pred[(max_proba < decision_boundary) & (y_pred == categoryid)] = None
+    with codecs.open('boundary.json', encoding='utf-8', mode='w') as f:
+        json.dump(obj=boundary_of_category, fp=f, ensure_ascii=False,
+                  encoding='utf-8', indent=4, separators=(',', ': '))
+
 
 with open('report.txt', 'w') as f:
     print(metrics.classification_report(y_true, y_pred), file=f)

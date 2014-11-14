@@ -11,12 +11,15 @@ train.csv test.csv: data_preprocessed.csv resampling.py
 
 .PHONY: base ensmble clean
 
+# base model, pure naive bayes
 base: train.csv test.csv model.py
 	python model.py
 
+# naive bayes with class specific decision boundary
 boundary: train.csv test.csv model.py
 	python model.py --adhoc_boundary
 
+# train two model on different feature sets, then combine them by MLE or entropy
 ensemble: train.csv test.csv ensemble_model.py
 	python ensemble_model.py
 
