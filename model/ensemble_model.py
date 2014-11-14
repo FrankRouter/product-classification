@@ -14,6 +14,7 @@ import numpy as np
 import json
 from collections import defaultdict
 import codecs
+from scipy.stats import entropy
 
 # vectorizer
 vectorizer = TfidfVectorizer(decode_error='ignore', ngram_range=(1, 2),
@@ -33,19 +34,21 @@ clf2 = MultinomialNB()
 clf2.fit(X2, y)
 
 # test
+y_true = test['categoryid'].values
 X1_test = vectorizer.transform(test['prodname'] + test['navigation'] +
                                test['merchant'] + test['brand'])
-X2_test = vectorizer.transform(test['prodname'])
-y_true = test['categoryid'].values
 jll_1 = clf1.predict_proba(X1_test)  # joint likelihood
 y1_pred = clf1.classes_[np.argmax(jll_1, axis=1)]
 proba_1 = np.amax(jll_1, axis=1)
+entropy_1 = entropy(jll_1.T)
 
+X2_test = vectorizer.transform(test['prodname'])
 jll_2 = clf2.predict_proba(X2_test)  # joint likelihood
 y2_pred = clf2.classes_[np.argmax(jll_2, axis=1)]
 proba_2 = np.amax(jll_2, axis=1)
+entropy_2 = entropy(jll_2.T)
 
-y_final_pred = np.where(proba_1 > proba_2, y1_pred, y2_pred)
+y_final_pred = np.where(entropy_1 < entropy_2, y1_pred, y2_pred)
 
 with open('report1.txt', 'w') as f:
     print(metrics.classification_report(y_true, y1_pred), file=f)
