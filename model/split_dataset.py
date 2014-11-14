@@ -5,7 +5,8 @@ import pandas as pd
 import numpy as np
 
 df = pd.read_csv('data_resampled.csv', header=None, error_bad_lines=False,
-                 names=['categoryid', 'categoryname', 'info'])
+                 names=['categoryid', 'categoryname', 'prodname', 'navigation',
+                        'merchant', 'brand'])
 r = np.random.random_sample((len(df)))
 train = df.ix[r >= 0.25]
 test = df.ix[r < 0.25]

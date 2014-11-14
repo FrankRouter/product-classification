@@ -1,5 +1,8 @@
-#
+# project specific
 *.bak
+model/*.csv
+model/*.txt
+model/*.json
 
 # Windows image file caches
 Thumbs.db
