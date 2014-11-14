@@ -11,9 +11,6 @@ import pandas as pd
 from sklearn import metrics
 from sklearn.naive_bayes import MultinomialNB
 import numpy as np
-import json
-from collections import defaultdict
-import codecs
 from scipy.stats import entropy
 
 # vectorizer
@@ -56,33 +53,3 @@ with open('report2.txt', 'w') as f:
     print(metrics.classification_report(y_true, y2_pred), file=f)
 with open('report3.txt', 'w') as f:
     print(metrics.classification_report(y_true, y_final_pred), file=f)
-
-# # write weights of words to json
-# wordsdict = defaultdict(dict)
-# words = vectorizer.get_feature_names()
-# for i in xrange(len(clf.feature_count_)):
-#     weights = clf.feature_count_[i]
-#     class_id = clf.classes_[i]
-#     for j in xrange(len(weights)):
-#         if weights[j] > 0:
-#             word = words[j]
-#             wordsdict[word][class_id] = weights[j]
-# with codecs.open('weights_of_words.json', encoding='utf-8', mode='w') as f:
-#     json.dump(obj=wordsdict, fp=f, ensure_ascii=False, encoding='utf-8',
-#               indent=4, separators=(',', ': '))
-
-# classesdict = defaultdict(list)
-# for i in xrange(len(clf.feature_count_)):
-#     weights = clf.feature_count_[i]
-#     class_id = clf.classes_[i]
-#     for j in xrange(len(weights)):
-#         if weights[j] > 0:
-#             word = words[j]
-#             classesdict[class_id].append((word, weights[j]))
-#     classesdict[class_id] = sorted(classesdict[class_id], key=lambda x: x[1],
-#                                    reverse=True)
-# with codecs.open('weights_of_classes.json', encoding='utf-8', mode='w') as f:
-#     for class_id in classesdict:
-#         print(class_id, file=f)
-#         for word, weight in classesdict[class_id]:
-#             print('\t%s:%f' % (word, weight), file=f)

@@ -14,13 +14,16 @@ import numpy as np
 import json
 from collections import defaultdict
 import codecs
+import sys
 
 # vectorizer
-tv = TfidfVectorizer(decode_error='ignore', ngram_range=(1, 2), min_df=5,
-                     max_df=0.5)
+vectorizer = TfidfVectorizer(decode_error='ignore', ngram_range=(1, 2),
+                             min_df=5, max_df=0.5)
 train = pd.read_csv('train.csv', dtype=object)
 test = pd.read_csv('test.csv', dtype=object)
-X = tv.fit_transform(train['info'].values)
+corpus = train['prodname'] + train['navigation'] \
+    + train['merchant'] + train['brand']
+X = vectorizer.fit_transform(corpus.values)
 y = train['categoryid'].values
 
 # train
@@ -28,7 +31,8 @@ clf = MultinomialNB()
 clf.fit(X, y)
 
 # test
-X_test = tv.transform(test['info'])
+X_test = vectorizer.transform(test['prodname'] + test['navigation'] +
+                              test['merchant'] + test['brand'])
 y_true = test['categoryid'].values
 jll = clf.predict_proba(X_test)  # joint likelihood
 y_pred = clf.classes_[np.argmax(jll, axis=1)]
@@ -36,33 +40,34 @@ max_proba = np.amax(jll, axis=1)
 
 # trade off between acurry and recall
 # search best decision boundry in each category
-# categoryid_set = set(train['categoryid'].values)
-# boundry_of_category = dict()
-# for categoryid in categoryid_set:
-#     max_f1 = .0
-#     decision_boundary = .0
-#     for threshold in np.arange(0, 0.5, 0.05):
-#         tp = (y_true == categoryid) & (y_pred == categoryid) \
-#             & (max_proba >= threshold)
-#         fp = (y_true != categoryid) & (y_pred == categoryid) \
-#             & (max_proba >= threshold)
-#         fn = (y_true == categoryid) \
-#             & ((y_pred != categoryid) | (max_proba < threshold))
-#         accuracy = sum(tp) / (sum(tp) + sum(fp))
-#         recall = sum(tp) / (sum(tp) + sum(fn))
-#         f1 = 2 * accuracy * recall / (accuracy + recall)
-#         if f1 > max_f1:
-#             max_f1 = f1
-#             decision_boundary = threshold
-#     boundry_of_category[categoryid] = decision_boundary
-#     y_pred[(max_proba < decision_boundary) & (y_pred == categoryid)] = None
+if sys.argv[1] == '--adhoc_boundary':
+    categoryid_set = set(train['categoryid'].values)
+    boundry_of_category = dict()
+    for categoryid in categoryid_set:
+        max_f1 = .0
+        decision_boundary = .0
+        for threshold in np.arange(0, 0.5, 0.05):
+            tp = (y_true == categoryid) & (y_pred == categoryid) \
+                & (max_proba >= threshold)
+            fp = (y_true != categoryid) & (y_pred == categoryid) \
+                & (max_proba >= threshold)
+            fn = (y_true == categoryid) \
+                & ((y_pred != categoryid) | (max_proba < threshold))
+            accuracy = sum(tp) / (sum(tp) + sum(fp))
+            recall = sum(tp) / (sum(tp) + sum(fn))
+            f1 = 2 * accuracy * recall / (accuracy + recall)
+            if f1 > max_f1:
+                max_f1 = f1
+                decision_boundary = threshold
+        boundry_of_category[categoryid] = decision_boundary
+        y_pred[(max_proba < decision_boundary) & (y_pred == categoryid)] = None
 
 with open('report.txt', 'w') as f:
     print(metrics.classification_report(y_true, y_pred), file=f)
 
-# write weights of words to json
+# output model in human readable format
 wordsdict = defaultdict(dict)
-words = tv.get_feature_names()
+words = vectorizer.get_feature_names()
 for i in xrange(len(clf.feature_count_)):
     weights = clf.feature_count_[i]
     class_id = clf.classes_[i]
