@@ -40,7 +40,7 @@ max_proba = np.amax(jll, axis=1)
 
 # trade off between acurry and recall
 # search best decision boundry in each category
-if sys.argv[1] == '--adhoc_boundary':
+if len(sys.argv) > 1 and sys.argv[1] == '--adhoc_boundary':
     categoryid_set = set(train['categoryid'].values)
     boundary_of_category = dict()
     max_p_category = np.amax(jll, axis=0)  # max probability in each category
