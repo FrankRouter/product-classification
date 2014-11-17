@@ -15,6 +15,7 @@ import json
 from collections import defaultdict
 import codecs
 import sys
+from datetime import datetime
 
 # vectorizer
 vectorizer = TfidfVectorizer(decode_error='ignore', ngram_range=(1, 2),
@@ -27,10 +28,22 @@ X = vectorizer.fit_transform(corpus.values)
 y = train['categoryid'].values
 
 # train
+categoryid_set = set(train['categoryid'].values)
+print('*' * 80)
+print('Training: ')
 clf = MultinomialNB()
-clf.fit(X, y)
+chunk = 50000
+m = X.shape[0]
+if m < chunk:
+    clf.fit(X, y)
+else:
+    for i, idx in enumerate(np.split(np.arange(m), xrange(chunk, m, chunk))):
+        print('\t%s\tTraining %d chunk' % (datetime.now(), (i + 1)))
+        clf.partial_fit(X[idx], y[idx], classes=list(categoryid_set))
 
 # test
+print('*' * 80)
+print('Testing: ')
 X_test = vectorizer.transform(test['prodname'] + test['navigation'] +
                               test['merchant'] + test['brand'])
 y_true = test['categoryid'].values
@@ -39,13 +52,15 @@ y_pred = clf.classes_[np.argmax(jll, axis=1)]
 max_proba = np.amax(jll, axis=1)
 
 # trade off between acurry and recall
-# search best decision boundry in each category
+# search best decision boundry for each category
+print('*' * 80)
+print('Searching: ')
 if len(sys.argv) > 1 and sys.argv[1] == '--adhoc_boundary':
-    categoryid_set = set(train['categoryid'].values)
     boundary_of_category = dict()
     max_p_category = np.amax(jll, axis=0)  # max probability in each category
     min_p_category = np.amin(jll, axis=0)  # min probability in each category
     for categoryid in categoryid_set:
+        print('\t%s\tSearching in %s' % (datetime.now(), categoryid))
         max_f1 = .0
         decision_boundary = .0
         idx = np.where(clf.classes_ == categoryid)
