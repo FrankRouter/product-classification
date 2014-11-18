@@ -51,29 +51,33 @@ jll = clf.predict_proba(X_test)  # joint likelihood
 y_pred = clf.classes_[np.argmax(jll, axis=1)]
 max_proba = np.amax(jll, axis=1)
 
+
 # trade off between acurry and recall
 # search best decision boundry for each category
-if len(sys.argv) > 1 and sys.argv[1] == '--adhoc_boundary':
+@profile
+def search():
     print('*' * 80)
     print('Searching: ')
     boundary_of_category = dict()
     max_p_category = np.amax(jll, axis=0)  # max probability in each category
     min_p_category = np.amin(jll, axis=0)  # min probability in each category
-    for categoryid in categoryid_set:
+    for i, categoryid in enumerate(categoryid_set):
+        if i > 20:
+            break
         print('\t%s\tSearching in %s' % (datetime.now(), categoryid))
         max_f1 = .0
         decision_boundary = .0
         idx = np.where(clf.classes_ == categoryid)
+        tp = (y_true == categoryid) & (y_pred == categoryid)
+        fp = (y_true != categoryid) & (y_pred == categoryid)
+        fn = (y_true == categoryid) & (y_pred != categoryid)
         for threshold in np.linspace(min_p_category[idx],
                                      max_p_category[idx], 10):
-            tp = (y_true == categoryid) & (y_pred == categoryid) \
-                & (max_proba >= threshold)
-            fp = (y_true != categoryid) & (y_pred == categoryid) \
-                & (max_proba >= threshold)
-            fn = (y_true == categoryid) \
-                & ((y_pred != categoryid) | (max_proba < threshold))
-            accuracy = sum(tp) / (sum(tp) + sum(fp))
-            recall = sum(tp) / (sum(tp) + sum(fn))
+            tp_num = sum(max_proba[tp] >= threshold)
+            fp_num = sum(max_proba[fp] >= threshold)
+            fn_sum = sum(fn) + sum(max_proba < threshold)
+            accuracy = tp_num / (tp_num + fp_num)
+            recall = tp_num / (tp_num + fn_sum)
             f1 = 2 * accuracy * recall / (accuracy + recall)
             if f1 > max_f1:
                 max_f1 = f1
@@ -84,6 +88,7 @@ if len(sys.argv) > 1 and sys.argv[1] == '--adhoc_boundary':
         json.dump(obj=boundary_of_category, fp=f, ensure_ascii=False,
                   encoding='utf-8', indent=4, separators=(',', ': '))
 
+search()
 
 with open('report.txt', 'w') as f:
     print(metrics.classification_report(y_true, y_pred), file=f)
