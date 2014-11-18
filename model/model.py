@@ -54,14 +54,13 @@ max_proba = np.amax(jll, axis=1)
 
 # trade off between acurry and recall
 # search best decision boundry for each category
-@profile
 def search():
     print('*' * 80)
     print('Searching: ')
     boundary_of_category = dict()
     max_p_category = np.amax(jll, axis=0)  # max probability in each category
     min_p_category = np.amin(jll, axis=0)  # min probability in each category
-    for i, categoryid in enumerate(categoryid_set):
+    for categoryid in categoryid_set:
         if i > 20:
             break
         print('\t%s\tSearching in %s' % (datetime.now(), categoryid))
@@ -75,7 +74,7 @@ def search():
                                      max_p_category[idx], 10):
             tp_num = sum(max_proba[tp] >= threshold)
             fp_num = sum(max_proba[fp] >= threshold)
-            fn_sum = sum(fn) + sum(max_proba < threshold)
+            fn_sum = sum(fn) + sum(max_proba[tp] < threshold)
             accuracy = tp_num / (tp_num + fp_num)
             recall = tp_num / (tp_num + fn_sum)
             f1 = 2 * accuracy * recall / (accuracy + recall)
