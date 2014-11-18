@@ -15,7 +15,7 @@ bag = []
 grouped = df.groupby(by=['categoryid'])
 for categoryid, group in grouped:
     group = group.reset_index(drop=True)
-    sampled_group = np.random.choice(group.shape[0], size=800)
+    sampled_group = np.random.choice(group.shape[0], size=400)
     bag.append(group.ix[sampled_group])
 resampled_data = pd.concat(bag)
 

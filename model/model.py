@@ -53,9 +53,9 @@ max_proba = np.amax(jll, axis=1)
 
 # trade off between acurry and recall
 # search best decision boundry for each category
-print('*' * 80)
-print('Searching: ')
 if len(sys.argv) > 1 and sys.argv[1] == '--adhoc_boundary':
+    print('*' * 80)
+    print('Searching: ')
     boundary_of_category = dict()
     max_p_category = np.amax(jll, axis=0)  # max probability in each category
     min_p_category = np.amin(jll, axis=0)  # min probability in each category
