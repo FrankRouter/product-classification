@@ -14,7 +14,7 @@ import numpy as np
 import json
 from collections import defaultdict
 import codecs
-import sys
+import os
 from datetime import datetime
 
 # vectorizer
@@ -61,33 +61,31 @@ def search():
     max_p_category = np.amax(jll, axis=0)  # max probability in each category
     min_p_category = np.amin(jll, axis=0)  # min probability in each category
     for categoryid in categoryid_set:
-        if i > 20:
-            break
         print('\t%s\tSearching in %s' % (datetime.now(), categoryid))
-        max_f1 = .0
-        decision_boundary = .0
         idx = np.where(clf.classes_ == categoryid)
         tp = (y_true == categoryid) & (y_pred == categoryid)
         fp = (y_true != categoryid) & (y_pred == categoryid)
         fn = (y_true == categoryid) & (y_pred != categoryid)
-        for threshold in np.linspace(min_p_category[idx],
-                                     max_p_category[idx], 10):
-            tp_num = sum(max_proba[tp] >= threshold)
-            fp_num = sum(max_proba[fp] >= threshold)
-            fn_sum = sum(fn) + sum(max_proba[tp] < threshold)
-            accuracy = tp_num / (tp_num + fp_num)
-            recall = tp_num / (tp_num + fn_sum)
-            f1 = 2 * accuracy * recall / (accuracy + recall)
-            if f1 > max_f1:
-                max_f1 = f1
-                decision_boundary = threshold
-        boundary_of_category[categoryid] = decision_boundary
-        y_pred[(max_proba < decision_boundary) & (y_pred == categoryid)] = None
+        proba_tp = np.sort(max_proba[tp])
+        proba_fp = np.sort(max_proba[fp])
+        proba_fn = np.sort(max_proba[fn])
+        threshold = np.linspace(min_p_category[idx], max_p_category[idx], 100)
+        tp_num = proba_tp.shape[0] - np.searchsorted(proba_tp, threshold)
+        fp_num = proba_fp.shape[0] - np.searchsorted(proba_fp, threshold)
+        fn_num = proba_fn.shape[0] + np.searchsorted(proba_tp, threshold)
+        accuracy = tp_num / (tp_num + fp_num)
+        recall = tp_num / (tp_num + fn_num)
+        f1 = 2 * accuracy * recall / (accuracy + recall)
+        idx_max_f1 = np.argmax(f1)
+        boundary_of_category[categoryid] = threshold[idx_max_f1]
+        y_pred[(max_proba < threshold[idx_max_f1])
+               & (y_pred == categoryid)] = None
     with codecs.open('boundary.json', encoding='utf-8', mode='w') as f:
         json.dump(obj=boundary_of_category, fp=f, ensure_ascii=False,
                   encoding='utf-8', indent=4, separators=(',', ': '))
 
-search()
+if not os.environ.get('search'):
+    search()
 
 with open('report.txt', 'w') as f:
     print(metrics.classification_report(y_true, y_pred), file=f)

@@ -17,7 +17,7 @@ base: train.csv test.csv model.py
 
 # naive bayes with class specific decision boundary
 boundary: train.csv test.csv model.py
-	python -u model.py --adhoc_boundary
+	set search=true; python -u model.py; unset search
 
 # train two model on different feature sets, then combine them by MLE or entropy
 ensemble: train.csv test.csv ensemble_model.py
