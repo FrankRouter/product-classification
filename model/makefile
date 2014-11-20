@@ -13,11 +13,11 @@ train.csv test.csv: data_preprocessed.csv resampling.py
 
 # base model, pure naive bayes
 base: train.csv test.csv model.py
-	python model.py
+	python -u model.py
 
 # naive bayes with class specific decision boundary
 boundary: train.csv test.csv model.py
-	set search=true; python -u model.py; unset search
+	export set search=true; python -u model.py; unset search
 
 # train two model on different feature sets, then combine them by MLE or entropy
 ensemble: train.csv test.csv ensemble_model.py
