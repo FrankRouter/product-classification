@@ -48,8 +48,8 @@ X_test = vectorizer.transform(test['prodname'] + test['navigation'] +
                               test['merchant'] + test['brand'])
 y_true = test['categoryid'].values
 jll = clf.predict_proba(X_test)  # joint likelihood
-y_pred = clf.classes_[np.argmax(jll, axis=1)]
-max_proba = np.amax(jll, axis=1)
+y_pred = clf.classes_[np.nanargmax(jll, axis=1)]
+max_proba = np.nanmax(jll, axis=1)
 
 
 # trade off between acurry and recall
@@ -58,8 +58,8 @@ def search():
     print('*' * 80)
     print('Searching: ')
     boundary_of_category = dict()
-    max_p_category = np.amax(jll, axis=0)  # max probability in each category
-    min_p_category = np.amin(jll, axis=0)  # min probability in each category
+    max_p_category = np.nanmax(jll, axis=0)  # max probability in each category
+    min_p_category = np.nanmin(jll, axis=0)  # min probability in each category
     for categoryid in categoryid_set:
         print('\t%s\tSearching in %s' % (datetime.now(), categoryid))
         idx = np.where(clf.classes_ == categoryid)
@@ -76,7 +76,7 @@ def search():
         accuracy = np.true_divide(tp_num, (tp_num + fp_num))
         recall = np.true_divide(tp_num, (tp_num + fn_num))
         f1 = np.true_divide(2 * accuracy * recall, (accuracy + recall))
-        idx_max_f1 = np.argmax(f1)
+        idx_max_f1 = np.nanargmax(f1)
         boundary_of_category[categoryid] = threshold[idx_max_f1]
         y_pred[(max_proba < threshold[idx_max_f1])
                & (y_pred == categoryid)] = None
