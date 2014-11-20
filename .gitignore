@@ -3,6 +3,7 @@
 model/*.csv
 model/*.txt
 model/*.json
+model/bin
 
 # Windows image file caches
 Thumbs.db

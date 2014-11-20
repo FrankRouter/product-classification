@@ -19,9 +19,9 @@ for categoryid, group in grouped:
     bag.append(group.ix[sampled_group])
 resampled_data = pd.concat(bag)
 
-# split train and test dataset
+# split train and cv dataset
 r = np.random.random_sample((len(resampled_data)))
 train = resampled_data.ix[r >= 0.25]
-test = resampled_data.ix[r < 0.25]
+cv = resampled_data.ix[r < 0.25]
 train.to_csv('train.csv', index=False, encoding='utf-8')
-test.to_csv('test.csv', index=False, encoding='utf-8')
+cv.to_csv('cv.csv', index=False, encoding='utf-8')

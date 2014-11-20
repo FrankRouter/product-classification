@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-# train two naive bayes model based on different feature sets
-# then ensemble them
+# train multinomial naive bayes model based
+# then search decision boundary for each category
 
 from __future__ import print_function
 from __future__ import division
@@ -16,12 +16,13 @@ from collections import defaultdict
 import codecs
 import os
 from datetime import datetime
+from sklearn.externals import joblib
 
 # vectorizer
 vectorizer = TfidfVectorizer(decode_error='ignore', ngram_range=(1, 2),
                              min_df=5, max_df=0.5)
 train = pd.read_csv('train.csv', dtype=object)
-test = pd.read_csv('test.csv', dtype=object)
+cv = pd.read_csv('cv.csv', dtype=object)
 corpus = train['prodname'] + train['navigation'] \
     + train['merchant'] + train['brand']
 X = vectorizer.fit_transform(corpus.values)
@@ -41,13 +42,13 @@ else:
         print('\t%s\tTraining %d chunk' % (datetime.now(), (i + 1)))
         clf.partial_fit(X[idx], y[idx], classes=list(categoryid_set))
 
-# test
+# cv
 print('*' * 80)
-print('Testing: ')
-X_test = vectorizer.transform(test['prodname'] + test['navigation'] +
-                              test['merchant'] + test['brand'])
-y_true = test['categoryid'].values
-jll = clf.predict_proba(X_test)  # joint likelihood
+print('cross validating: ')
+X_cv = vectorizer.transform(cv['prodname'] + cv['navigation'] +
+                            cv['merchant'] + cv['brand'])
+y_true = cv['categoryid'].values
+jll = clf.predict_proba(X_cv)  # joint likelihood
 y_pred = clf.classes_[np.nanargmax(jll, axis=1)]
 max_proba = np.nanmax(jll, axis=1)
 
@@ -89,6 +90,10 @@ if os.environ.get('search'):
 
 with open('report.txt', 'w') as f:
     print(metrics.classification_report(y_true, y_pred), file=f)
+
+# model persistence
+joblib.dump(cv, 'bin/tfidf')
+joblib.dump(clf, 'bin/classifier')
 
 # output model in human readable format
 wordsdict = defaultdict(dict)

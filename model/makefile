@@ -6,23 +6,23 @@ data.csv: ../dataset/*.csv
 data_preprocessed.csv: data.csv preprocessing.py
 	python preprocessing.py
 
-train.csv test.csv: data_preprocessed.csv resampling.py
+train.csv cv.csv: data_preprocessed.csv resampling.py
 	python resampling.py
 
 .PHONY: base ensmble clean
 
 # base model, pure naive bayes
-base: train.csv test.csv model.py
+base: train.csv cv.csv model.py
 	python -u model.py
 
 # naive bayes with class specific decision boundary
-boundary: train.csv test.csv model.py
+boundary: train.csv cv.csv model.py
 	export set search=true; python -u model.py; unset search
 
 # train two model on different feature sets, then combine them by MLE or entropy
-ensemble: train.csv test.csv ensemble_model.py
+ensemble: train.csv cv.csv ensemble_model.py
 	python ensemble_model.py
 
 clean:
-	-rm data.csv data_preprocessed.csv train.csv test.csv report*.txt \
+	-rm data.csv data_preprocessed.csv train.csv cv.csv report*.txt \
 		weights_of_words.json weights_of_classes.json
