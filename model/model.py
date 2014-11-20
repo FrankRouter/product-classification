@@ -73,9 +73,9 @@ def search():
         tp_num = proba_tp.shape[0] - np.searchsorted(proba_tp, threshold)
         fp_num = proba_fp.shape[0] - np.searchsorted(proba_fp, threshold)
         fn_num = proba_fn.shape[0] + np.searchsorted(proba_tp, threshold)
-        accuracy = tp_num / (tp_num + fp_num)
-        recall = tp_num / (tp_num + fn_num)
-        f1 = 2 * accuracy * recall / (accuracy + recall)
+        accuracy = np.true_divide(tp_num, (tp_num + fp_num))
+        recall = np.true_divide(tp_num, (tp_num + fn_num))
+        f1 = np.true_divide(2 * accuracy * recall, (accuracy + recall))
         idx_max_f1 = np.argmax(f1)
         boundary_of_category[categoryid] = threshold[idx_max_f1]
         y_pred[(max_proba < threshold[idx_max_f1])
@@ -84,7 +84,7 @@ def search():
         json.dump(obj=boundary_of_category, fp=f, ensure_ascii=False,
                   encoding='utf-8', indent=4, separators=(',', ': '))
 
-if not os.environ.get('search'):
+if os.environ.get('search'):
     search()
 
 with open('report.txt', 'w') as f:
