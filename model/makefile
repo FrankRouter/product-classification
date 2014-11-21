@@ -9,7 +9,7 @@ data_preprocessed.csv: data.csv preprocessing.py
 train.csv cv.csv: data_preprocessed.csv resampling.py
 	python resampling.py
 
-.PHONY: base ensmble clean
+.PHONY: base ensmble test clean
 
 # base model, pure naive bayes
 base: train.csv cv.csv model.py
@@ -22,6 +22,9 @@ boundary: train.csv cv.csv model.py
 # train two model on different feature sets, then combine them by MLE or entropy
 ensemble: train.csv cv.csv ensemble_model.py
 	python ensemble_model.py
+
+test: test.py test.csv ../allcategories.csv boundary.json
+	python -u test.py
 
 clean:
 	-rm data.csv data_preprocessed.csv train.csv cv.csv report*.txt \

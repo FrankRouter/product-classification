@@ -38,7 +38,7 @@ with open('../allcategories.csv') as f:
         category_dict[categoryid.strip()] = categoryname.strip()
 with open('boundary.json') as f:
     boundary = json.load(f)
-test = pd.read_csv('small.csv', names=['prodname', 'navigation', 'merchant',
+test = pd.read_csv('test.csv', names=['prodname', 'navigation', 'merchant',
                    'brand'], encoding='utf-8')
 
 print('%s\t%s' % (datetime.now(), 'Preprocessing...'))
@@ -51,7 +51,7 @@ tfidf = joblib.load('bin/tfidf')
 clf = joblib.load('bin/classifier')
 test['categoryid'] = test['brand'].map(lambda x: '')
 test['proba'] = test['brand'].map(lambda x: .0)
-step = 200
+step = 20000
 for idx in np.arange(0, test.shape[0], step):
     print('\t%s\trecords' % idx)
     # X is a dense matrix, so it consumes lots of memory
