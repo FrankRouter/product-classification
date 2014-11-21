@@ -92,7 +92,7 @@ with open('report.txt', 'w') as f:
     print(metrics.classification_report(y_true, y_pred), file=f)
 
 # model persistence
-joblib.dump(cv, 'bin/tfidf')
+joblib.dump(vectorizer, 'bin/tfidf')
 joblib.dump(clf, 'bin/classifier')
 
 # output model in human readable format
