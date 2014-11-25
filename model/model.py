@@ -92,6 +92,8 @@ with open('report.txt', 'w') as f:
     print(metrics.classification_report(y_true, y_pred), file=f)
 
 # model persistence
+if not os.path.isdir('bin'):
+    os.mkdir('bin')
 joblib.dump(vectorizer, 'bin/tfidf')
 joblib.dump(clf, 'bin/classifier')
 

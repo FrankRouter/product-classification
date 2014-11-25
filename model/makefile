@@ -27,5 +27,6 @@ test: test.py test.csv ../allcategories.csv boundary.json
 	python -u test.py
 
 clean:
-	-rm data.csv data_preprocessed.csv train.csv cv.csv report*.txt \
-		weights_of_words.json weights_of_classes.json
+	-rm -rf data.csv data_preprocessed.csv train.csv cv.csv report*.txt \
+		weights_of_words.json weights_of_classes.json bin/ boundary.json \
+		data_resampled.csv
