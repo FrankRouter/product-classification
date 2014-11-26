@@ -100,8 +100,8 @@ joblib.dump(clf, 'bin/classifier')
 # output model in human readable format
 wordsdict = defaultdict(dict)
 words = vectorizer.get_feature_names()
-for i in xrange(len(clf.feature_count_)):
-    weights = clf.feature_count_[i]
+for i in xrange(len(clf.feature_log_prob_)):
+    weights = clf.feature_log_prob_[i]
     class_id = clf.classes_[i]
     for j in xrange(len(weights)):
         if weights[j] > 0:
@@ -112,8 +112,8 @@ with codecs.open('weights_by_words.json', encoding='utf-8', mode='w') as f:
               indent=4, separators=(',', ': '))
 
 classesdict = defaultdict(list)
-for i in xrange(len(clf.feature_count_)):
-    weights = clf.feature_count_[i]
+for i in xrange(len(clf.feature_log_prob_)):
+    weights = clf.feature_log_prob_[i]
     class_id = clf.classes_[i]
     for j in xrange(len(weights)):
         if weights[j] > 0:
