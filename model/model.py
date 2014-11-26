@@ -107,7 +107,7 @@ for i in xrange(len(clf.feature_count_)):
         if weights[j] > 0:
             word = words[j]
             wordsdict[word][class_id] = weights[j]
-with codecs.open('weights_of_words.json', encoding='utf-8', mode='w') as f:
+with codecs.open('weights_by_words.json', encoding='utf-8', mode='w') as f:
     json.dump(obj=wordsdict, fp=f, ensure_ascii=False, encoding='utf-8',
               indent=4, separators=(',', ': '))
 
@@ -121,7 +121,7 @@ for i in xrange(len(clf.feature_count_)):
             classesdict[class_id].append((word, weights[j]))
     classesdict[class_id] = sorted(classesdict[class_id], key=lambda x: x[1],
                                    reverse=True)
-with codecs.open('weights_of_classes.json', encoding='utf-8', mode='w') as f:
+with codecs.open('weights_by_classes.json', encoding='utf-8', mode='w') as f:
     for class_id in classesdict:
         print(class_id, file=f)
         for word, weight in classesdict[class_id]:
