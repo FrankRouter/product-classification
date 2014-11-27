@@ -12,17 +12,35 @@ from sklearn import metrics
 from sklearn.naive_bayes import MultinomialNB
 import numpy as np
 import json
-from collections import defaultdict
 import codecs
 import os
 from datetime import datetime
 from sklearn.externals import joblib
+import argparse
+import shutil
 
-# vectorizer
+parser = argparse.ArgumentParser()
+parser.add_argument('-t', '--train', help='train dataset', type=str,
+                    default='train.csv')
+parser.add_argument('-c', '--crossvalidate', help='cross validation dataset',
+                    type=str, default='cv.csv')
+parser.add_argument('-s', '--search', help='search decision boundary turned on',
+                    action='store_true')
+parser.add_argument('-p', '--persistence', action='store_true',
+                    help='persistence model in human readable format')
+args = parser.parse_args()
+
+print('*' * 80)
+print('Loading data...')
+print('\t%s' % datetime.now())
+train = pd.read_csv(args.train, dtype=object)
+cv = pd.read_csv(args.crossvalidate, dtype=object)
+
+print('*' * 80)
+print('Vectorizing...')
+print('\t%s' % datetime.now())
 vectorizer = TfidfVectorizer(decode_error='ignore', ngram_range=(1, 2),
-                             min_df=5, max_df=0.5)
-train = pd.read_csv('train.csv', dtype=object)
-cv = pd.read_csv('cv.csv', dtype=object)
+                             min_df=10, max_df=0.5)
 corpus = train['prodname'] + train['navigation'] \
     + train['merchant'] + train['brand']
 X = vectorizer.fit_transform(corpus.values)
@@ -45,6 +63,7 @@ else:
 # cv
 print('*' * 80)
 print('cross validating: ')
+print('\t%s' % datetime.now())
 X_cv = vectorizer.transform(cv['prodname'] + cv['navigation'] +
                             cv['merchant'] + cv['brand'])
 y_true = cv['categoryid'].values
@@ -81,48 +100,48 @@ def search():
         boundary_of_category[categoryid] = threshold[idx_max_f1]
         y_pred[(max_proba < threshold[idx_max_f1])
                & (y_pred == categoryid)] = None
-    with codecs.open('boundary.json', encoding='utf-8', mode='w') as f:
-        json.dump(obj=boundary_of_category, fp=f, ensure_ascii=False,
-                  encoding='utf-8', indent=4, separators=(',', ': '))
+    if args.persistence:
+        with codecs.open('boundary.json', encoding='utf-8', mode='w') as f:
+            json.dump(obj=boundary_of_category, fp=f, ensure_ascii=False,
+                      encoding='utf-8', indent=4, separators=(',', ': '))
 
-if os.environ.get('search'):
+if args.search:
     search()
 
 with open('report.txt', 'w') as f:
     print(metrics.classification_report(y_true, y_pred), file=f)
 
-# model persistence
+# model persistence in binary
 if not os.path.isdir('bin'):
     os.mkdir('bin')
 joblib.dump(vectorizer, 'bin/tfidf')
 joblib.dump(clf, 'bin/classifier')
 
-# output model in human readable format
-wordsdict = defaultdict(dict)
-words = vectorizer.get_feature_names()
-for i in xrange(len(clf.feature_log_prob_)):
-    weights = clf.feature_log_prob_[i]
-    class_id = clf.classes_[i]
-    for j in xrange(len(weights)):
-        if weights[j] > 0:
+if args.persistence:
+    print('*' * 80)
+    print('Outputting model in human readable format')
+    output_dir = 'log_proba'
+    shutil.rmtree(output_dir, ignore_errors=True)
+    os.mkdir(output_dir)
+    words = vectorizer.get_feature_names()
+    for i in xrange(len(clf.feature_log_prob_)):
+        pairs = []
+        log_proba = clf.feature_log_prob_[i]
+        class_id = clf.classes_[i]
+        for j in xrange(len(log_proba)):
             word = words[j]
-            wordsdict[word][class_id] = weights[j]
-with codecs.open('weights_by_words.json', encoding='utf-8', mode='w') as f:
-    json.dump(obj=wordsdict, fp=f, ensure_ascii=False, encoding='utf-8',
-              indent=4, separators=(',', ': '))
+            pairs.append((word, log_proba[j]))
+        pairs = sorted(pairs, key=lambda x: x[1], reverse=True)
+        output_path = os.path.join(output_dir, '%s.txt' % class_id)
+        with codecs.open(output_path, encoding='utf-8', mode='w') as f:
+            for word, weight in pairs:
+                print('\t%s:%f' % (word, weight), file=f)
 
-classesdict = defaultdict(list)
-for i in xrange(len(clf.feature_log_prob_)):
-    weights = clf.feature_log_prob_[i]
-    class_id = clf.classes_[i]
-    for j in xrange(len(weights)):
-        if weights[j] > 0:
-            word = words[j]
-            classesdict[class_id].append((word, weights[j]))
-    classesdict[class_id] = sorted(classesdict[class_id], key=lambda x: x[1],
-                                   reverse=True)
-with codecs.open('weights_by_classes.json', encoding='utf-8', mode='w') as f:
-    for class_id in classesdict:
-        print(class_id, file=f)
-        for word, weight in classesdict[class_id]:
-            print('\t%s:%f' % (word, weight), file=f)
+        if (i + 1) % 10 == 0:
+            print('\t%s\t%d categories writen' % (datetime.now(), (i + 1)))
+    if (i + 1) % 10 != 0:
+        print('\t%s\t%d categories writen' % (datetime.now(), (i + 1)))
+
+print('*' * 80)
+print('Finish')
+print('\t%s' % datetime.now())

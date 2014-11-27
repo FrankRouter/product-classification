@@ -4,6 +4,10 @@ model/*.csv
 model/*.txt
 model/*.json
 model/bin
+model/log_proba
+
+# pycharm project files
+.idea
 
 # Windows image file caches
 Thumbs.db
