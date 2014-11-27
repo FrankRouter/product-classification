@@ -135,7 +135,7 @@ if args.persistence:
         output_path = os.path.join(output_dir, '%s.txt' % class_id)
         with codecs.open(output_path, encoding='utf-8', mode='w') as f:
             for word, weight in pairs:
-                print('\t%s:%f' % (word, weight), file=f)
+                print('%s:%f' % (word, weight), file=f)
 
         if (i + 1) % 10 == 0:
             print('\t%s\t%d categories writen' % (datetime.now(), (i + 1)))
