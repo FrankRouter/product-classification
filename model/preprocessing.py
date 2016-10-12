@@ -13,7 +13,7 @@ print('*' * 80)
 print('Preprocessing...')
 with codecs.open('data_preprocessed.csv', 'w', encoding='utf-8') as out,\
         codecs.open('data.csv', encoding='utf-8') as f:
-    for i, line in enumerate(f):
+    for i, line in enumerate(f, 1):
         # should be 6 columns
         cells = line.strip().split(',', 5)
         try:
@@ -26,7 +26,7 @@ with codecs.open('data_preprocessed.csv', 'w', encoding='utf-8') as out,\
         except:
             pass
 
-        if (i + 1) % 10000 == 0:
-            print('\t%s\t%d lines processed' % (datetime.now(), (i + 1)))
-    if (i + 1) % 10000 != 0:
-        print('\t%s\t%d lines processed' % (datetime.now(), (i + 1)))
+        if i % 10000 == 0:
+            print('\t%s\t%d lines processed' % (datetime.now(), i))
+    if i % 10000 != 0:
+        print('\t%s\t%d lines processed' % (datetime.now(), i))
